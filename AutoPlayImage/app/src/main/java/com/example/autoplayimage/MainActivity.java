@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
         initReceiver();
         initData();
         initView();
-
+        clearData();
     }
     //注册时间变化监听
     private void initReceiver() {
@@ -110,7 +110,8 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
         }
         else
         {
-            getDataFromSP();
+            getDataFromInternet();
+//            getDataFromSP();
             Toast.makeText(this,"get data from SP",Toast.LENGTH_SHORT).show();
         }
     }
@@ -124,59 +125,41 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
         }
     }
     //网络请求数据
+
     private void getDataFromInternet() {
-        clearData();
+        String url="http://api.7958.com/public/index.php/admin/Image/getimg";
+        OkHttpUtils.getInstance().doGet(url, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
 
-        list_path.add("http://image.ngchina.com.cn/2019/0624/20190624051835895.jpg");
-        list_path.add("http://image.ngchina.com.cn/2019/0614/thumb_469_352_20190614100520711.jpg");
-        list_path.add("http://image.ngchina.com.cn/2017/1024/20171024023609391.jpg");
-        list_path.add("https://cdn.pixabay.com/photo/2019/09/07/20/35/way-4459666_960_720.jpg");
-        list_title.add("我爱NBA");
-        list_title.add("我爱科比布莱恩特");
-        list_title.add("我爱??");
-        list_title.add("我爱我也不知道啥");
-        for (int i = 0; i <list_title.size() ; i++) {
-            mEditor.putString(("title"+i),list_title.get(i));
-            mEditor.putString(("path"+i),list_path.get(i));
-        }
-        mEditor.putBoolean("isDataExist",true);
-        mEditor.apply();
+            }
 
-    }
-    private void getDataFromInternet2() {
-        clearData();
-//        OkHttpUtils.getInstance().doGet(url, new Callback() {
-//            @Override
-//            public void onFailure(Call call, IOException e) {
-//
-//            }
-//
-//            @Override
-//            public void onResponse(Call call, Response response) throws IOException {
-//                if (response.body()!=null){
-//                    String myBody=response.body().string();
-//                    try {
-//                        JSONObject object=new JSONObject(myBody);
-//                        JSONArray array=object.getJSONArray("data");
-//                        for (int i = 0; i <array.length() ; i++) {
-//                            JSONObject imageData=array.getJSONObject(i);
-//                            list_path.add(imageData.optString("imgurl"));
-//                            list_title.add(imageData.optString("imgname"));
-//                        }
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        });
-        list_path.add("http://image.ngchina.com.cn/2019/0624/20190624051835895.jpg");
-        list_path.add("http://image.ngchina.com.cn/2019/0614/thumb_469_352_20190614100520711.jpg");
-        list_path.add("http://image.ngchina.com.cn/2017/1024/20171024023609391.jpg");
-        list_path.add("https://cdn.pixabay.com/photo/2019/09/07/20/35/way-4459666_960_720.jpg");
-        list_title.add("2第二次加载");
-        list_title.add("2我爱科比布莱恩特");
-        list_title.add("2我爱??");
-        list_title.add("2我爱我也不知道啥");
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.body()!=null){
+                    String myBody=response.body().string();
+                    try {
+                        JSONObject object=new JSONObject(myBody);
+                        JSONArray array=object.getJSONArray("data");
+                        for (int i = 0; i <array.length() ; i++) {
+                            JSONObject imageData=array.getJSONObject(i);
+                            list_path.add(imageData.optString("imgurl"));
+                            list_title.add(imageData.optString("imgname"));
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+//        list_path.add("http://image.ngchina.com.cn/2019/0624/20190624051835895.jpg");
+//        list_path.add("http://image.ngchina.com.cn/2019/0614/thumb_469_352_20190614100520711.jpg");
+//        list_path.add("http://image.ngchina.com.cn/2017/1024/20171024023609391.jpg");
+//        list_path.add("https://cdn.pixabay.com/photo/2019/09/07/20/35/way-4459666_960_720.jpg");
+//        list_title.add("2第二次加载");
+//        list_title.add("2我爱科比布莱恩特");
+//        list_title.add("2我爱??");
+//        list_title.add("2我爱我也不知道啥");
         for (int i = 0; i <list_title.size() ; i++) {
             mEditor.putString(("title"+i),list_title.get(i));
             mEditor.putString(("path"+i),list_path.get(i));
@@ -224,7 +207,8 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
                     //整点请求新数据
                     if ((hour)%12==0)
                     {
-                        getDataFromInternet2();
+                        clearData();
+                        getDataFromInternet();
                         mBanner.setBannerTitles(list_title);
                         mBanner.setImages(list_path);
                         mBanner.start();
