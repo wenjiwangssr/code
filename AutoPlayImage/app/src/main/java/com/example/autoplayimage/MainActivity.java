@@ -31,6 +31,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.concurrent.Callable;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -39,11 +40,11 @@ import okhttp3.Response;
 /**
  * The type Main activity.
  */
-public class MainActivity extends AppCompatActivity implements OnBannerListener {
+public class MainActivity extends AppCompatActivity implements OnBannerListener{
 
     private Banner mBanner;
-    private ArrayList<String> list_path;//图片地址
-    private ArrayList<String> list_title;//图片标题
+    private  ArrayList<String> list_path;//图片地址
+    private  ArrayList<String> list_title;//图片标题
     //SP实现数据持久化
     private SharedPreferences mSharedPreferences;
     private SharedPreferences.Editor mEditor;
@@ -53,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
     //时间变化监听
     private IntentFilter mIntentFilter;
     private TimeChangeReceiver mTimeChangeReceiver;
+
+    private String myBody;
 
 
     @Override
@@ -74,9 +77,10 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
         isDataExist=mSharedPreferences.getBoolean("isDataExist",false);
 
         initReceiver();
+
         initData();
         initView();
-        clearData();
+//        clearData();
     }
     //注册时间变化监听
     private void initReceiver() {
@@ -100,9 +104,12 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
         mBanner.setImages(list_path)
                 .setOnBannerListener(this)
                 .start();
+        if (!list_path.isEmpty())
+        Toast.makeText(MainActivity.this,list_path.get(1),Toast.LENGTH_SHORT).show();
     }
     //数据加载
     private void initData() {
+
         if (!isDataExist)
         {
             getDataFromInternet();
@@ -111,15 +118,15 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
         else
         {
             getDataFromInternet();
-//            getDataFromSP();
+            getDataFromSP();
             Toast.makeText(this,"get data from SP",Toast.LENGTH_SHORT).show();
-        }
-    }
+        }}
+
     //本地提取数据
-    private void getDataFromSP() {
-        list_title.clear();
-        list_path.clear();
-        for (int i = 0; i <4 ; i++) {
+    private void getDataFromSP(){
+//        list_title.clear();
+//        list_path.clear();
+        for (int i = 0; i <6 ; i++) {
             list_title.add(mSharedPreferences.getString(("title"+i),""));
             list_path.add(mSharedPreferences.getString(("path"+i),""));
         }
@@ -127,7 +134,8 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
     //网络请求数据
 
     private void getDataFromInternet() {
-        String url="http://api.7958.com/public/index.php/admin/Image/getimg";
+//        clearData();
+        String url="http://api.7958.com/public/index.php/api/image/getimg";
         OkHttpUtils.getInstance().doGet(url, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -138,28 +146,12 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.body()!=null){
                     String myBody=response.body().string();
-                    try {
-                        JSONObject object=new JSONObject(myBody);
-                        JSONArray array=object.getJSONArray("data");
-                        for (int i = 0; i <array.length() ; i++) {
-                            JSONObject imageData=array.getJSONObject(i);
-                            list_path.add(imageData.optString("imgurl"));
-                            list_title.add(imageData.optString("imgname"));
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+
                 }
             }
         });
-//        list_path.add("http://image.ngchina.com.cn/2019/0624/20190624051835895.jpg");
-//        list_path.add("http://image.ngchina.com.cn/2019/0614/thumb_469_352_20190614100520711.jpg");
-//        list_path.add("http://image.ngchina.com.cn/2017/1024/20171024023609391.jpg");
-//        list_path.add("https://cdn.pixabay.com/photo/2019/09/07/20/35/way-4459666_960_720.jpg");
-//        list_title.add("2第二次加载");
-//        list_title.add("2我爱科比布莱恩特");
-//        list_title.add("2我爱??");
-//        list_title.add("2我爱我也不知道啥");
+
+
         for (int i = 0; i <list_title.size() ; i++) {
             mEditor.putString(("title"+i),list_title.get(i));
             mEditor.putString(("path"+i),list_path.get(i));
@@ -168,6 +160,8 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
         mEditor.apply();
 
     }
+
+
 
     private void clearData() {
         list_path.clear();
@@ -180,6 +174,43 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
     @Override
     public void OnBannerClick(int position) {
         Toast.makeText(this,"You click photo:"+(position+1),Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onSuccess(String result) {
+        try {
+            JSONObject object=new JSONObject(result);
+            JSONArray array=object.getJSONArray("data");
+            for (int i = 0; i <array.length() ; i++) {
+                JSONObject imageData=array.getJSONObject(i);
+                list_path.add(imageData.optString("imgurl").replace('\\','\0'));
+                list_title.add(imageData.optString("imgname"));
+
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public String call(){
+        String url="http://api.7958.com/public/index.php/api/image/getimg";
+        OkHttpUtils.getInstance().doGet(url, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.body()!=null){
+                     myBody=response.body().string();
+
+                }
+            }
+        });
+        return myBody;
     }
 
 
@@ -208,7 +239,8 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
                     if ((hour)%12==0)
                     {
                         clearData();
-                        getDataFromInternet();
+                        initData();
+//                        getDataFromInternet();
                         mBanner.setBannerTitles(list_title);
                         mBanner.setImages(list_path);
                         mBanner.start();
