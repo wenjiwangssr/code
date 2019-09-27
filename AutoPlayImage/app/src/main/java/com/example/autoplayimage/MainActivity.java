@@ -2,6 +2,7 @@ package com.example.autoplayimage;
 
 
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.BroadcastReceiver;
@@ -12,6 +13,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -34,6 +36,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -42,10 +45,13 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 /**
- * The type Main activity.
+ * @author wenjiwang
+ *
+ *  使用Okhttp3网络请求图片数据在banner框架中实现轮播图
  */
 public class MainActivity extends AppCompatActivity implements OnBannerListener {
 
+    private MyHandler myHandler;
     private Banner mBanner;
     private ArrayList<String> list_path;//图片地址
     private ArrayList<String> list_title;//图片标题
@@ -60,11 +66,14 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
     private TimeChangeReceiver mTimeChangeReceiver;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         App.context=this;
+        myHandler=new MyHandler(this);
+
 
         getSupportActionBar().hide();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -83,6 +92,33 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
         initData();
 //        initView();
 
+    }
+
+    private  static class MyHandler extends Handler{
+        private WeakReference<MainActivity> mWeakReference;
+
+        public MyHandler(MainActivity activity){
+            mWeakReference=new WeakReference<MainActivity>(activity);
+        }
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            if (mWeakReference != null && mWeakReference.get() != null) {
+                mWeakReference.get().handleMassage(msg);
+            }
+
+        }
+    };
+    private void handleMassage(Message msg){
+        switch (msg.what){
+            case 1:
+                list_path=msg.getData().getStringArrayList("list_path");
+                list_title=msg.getData().getStringArrayList("list_title");
+                initView();
+                break;
+            default:
+                break;
+        }
     }
     //注册时间变化监听
     private void initReceiver() {
@@ -110,9 +146,11 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
     //数据加载
     private void initData() {
 
+
+
         if (!isDataExist)
         {
-            getDataFromInternet();
+            getDataFromInternet2();
             Log.d("INIT_DATA","get data from internet");
             Toast.makeText(this,"get data from internet",Toast.LENGTH_SHORT).show();
         }
@@ -132,6 +170,8 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
             list_path.add(mSharedPreferences.getString(("path"+i),""));
         }
         initView();
+        
+
     }
 
 
@@ -163,14 +203,50 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
 
             }
         });
-
-
     }
+    //用handler传递数据
+    private void getDataFromInternet2() {
+        clearData();
+        String url="http://api.7958.com/public/index.php/api/image/getimg";
+        OkHttpUtils.getInstance().doGet(url, new DataCallBack() {
+            @Override
+            public void onSuccess(String result) {
+
+                try {
+                    JSONObject object=new JSONObject(result);
+                    JSONArray array=object.optJSONArray("data");
+                    for (int i = 0; i <array.length() ; i++) {
+                        list_title.add(array.getJSONObject(i).optString("id"));
+                        list_path.add(array.getJSONObject(i).optString("imgurl").replace('\\','\0'));
+                        mEditor.putString("path"+i,array.getJSONObject(i).optString("imgurl").replace('\\','\0'));
+                        mEditor.putString("imgName"+i,array.getJSONObject(i).optString("id"));
+                    }
+                    mEditor.putBoolean("isDataExist",true);
+                    mEditor.commit();
+                    Bundle bundle=new Bundle();
+                    bundle.putStringArrayList("list_path",list_path);
+                    bundle.putStringArrayList("list_title",list_title);
+                    Message message=new Message();
+                    message.what=1;
+                    message.setData(bundle);
+                    myHandler.sendMessage(message);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+    }
+
 
     private void clearData() {
         list_path.clear();
         list_title.clear();
 
+    }
+    private void clearSpData(){
+        mEditor.clear().commit();
     }
 
 
@@ -207,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements OnBannerListener 
                     //整点请求新数据
                     if ((hour)%12==0)
                     {
-
+                        clearSpData();
                         getDataFromInternet();
                         mBanner.setBannerTitles(list_title);
                         mBanner.setImages(list_path);
