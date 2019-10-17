@@ -1,6 +1,9 @@
-package com.example.autoplayad;
+package com.example.autoplayad.utils;
 
 import android.text.TextUtils;
+
+import com.example.autoplayad.App;
+import com.example.autoplayad.DataCallBack;
 
 import java.io.IOException;
 import java.util.Map;
@@ -123,7 +126,7 @@ public class OkHttpUtils {
 
 
 
-    public void doPost(String url, Map<String, String> params, Callback callback) {
+    public void doPost(String url, Map<String, String> params, final  DataCallBack callback) {
         if (TextUtils.isEmpty(url))
             return;
         //创建OkHttpClient请求对象
@@ -133,15 +136,30 @@ public class OkHttpUtils {
         //遍历集合
         for (String key : params.keySet()) {
             builder.add(key, params.get(key));
-
         }
-
-
         //创建Request
         Request request = new Request.Builder().url(url).post(builder.build()).build();
 
         Call call = okHttpClient.newCall(request);
-        call.enqueue(callback);
+
+        call.enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                final String responseStr=response.body().string();
+                App.context.runOnUiThread(new Runnable() {                           //runOnUiThread
+                    @Override
+                    public void run() {
+                        callback.onSuccess(responseStr);
+                    }
+                });
+
+            }
+        });
 
     }
 }

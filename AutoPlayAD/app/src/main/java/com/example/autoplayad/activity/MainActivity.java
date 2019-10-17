@@ -1,4 +1,4 @@
-package com.example.autoplayad;
+package com.example.autoplayad.activity;
 
 
 
@@ -12,14 +12,11 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -27,8 +24,11 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestOptions;
+import com.example.autoplayad.App;
+import com.example.autoplayad.DataCallBack;
+import com.example.autoplayad.utils.Config;
+import com.example.autoplayad.utils.OkHttpUtils;
+import com.example.autoplayad.R;
 import com.stx.xhb.xbanner.XBanner;
 import com.stx.xhb.xbanner.transformers.Transformer;
 import com.tencent.bugly.Bugly;
@@ -62,6 +62,11 @@ public class MainActivity extends AppCompatActivity  {
     private IntentFilter mIntentFilter;
     private TimeChangeReceiver mTimeChangeReceiver;
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Toast.makeText(this,"再按一次推出程序",Toast.LENGTH_SHORT).show();
+    }
 
     @Override
     protected void onStop() {
@@ -91,7 +96,7 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bugly.init(this,"02c221b6f0",false);
+        Bugly.init(this, Config.appId,false);
 
         setContentView(R.layout.activity_main);
 
@@ -158,7 +163,7 @@ public class MainActivity extends AppCompatActivity  {
     private void initView() {
         mXBanner = findViewById(R.id.banner);
         mXBanner.setAllowUserScrollable(true);
-        mXBanner.setAutoPalyTime(4000);
+        mXBanner.setAutoPalyTime(Config.autoPlayTime);
         mXBanner.setPageTransformer(Transformer.Accordion);
         mXBanner.setData(list_path, list_title);
         mXBanner.loadImage(new XBanner.XBannerAdapter() {
@@ -214,36 +219,42 @@ public class MainActivity extends AppCompatActivity  {
 
 
 
-    //网络请求数据
-    private void getDataFromInternet() {
-        clearData();
-        String url="http://api.7958.com/public/index.php/api/image/getimg";
-        OkHttpUtils.getInstance().doGet(url, new DataCallBack() {
-            @Override
-            public void onSuccess(String result) {
+//    //网络请求数据
+//    private void getDataFromInternet() {
+//        clearData();
+//        String url="http://api.7958.com/public/index.php/api/image/getimg";
+//        OkHttpUtils.getInstance().doGet(url, new DataCallBack() {
+//            @Override
+//            public void onSuccess(String result) {
+//
+//                try {
+//                    JSONObject object=new JSONObject(result);
+//                    JSONArray array=object.optJSONArray("data");
+//                    mEditor.putInt("len",array.length());
+//                    for (int i = 0; i <array.length() ; i++) {
+//                        list_title.add(array.getJSONObject(i).optString("imgname")+" ");
+//                        list_path.add(array.getJSONObject(i).optString("imgurl").replace('\\','\0'));
+//                        mEditor.putString("path"+i,array.getJSONObject(i).optString("imgurl").replace('\\','\0'));
+//                        mEditor.putString("imgName"+i,array.getJSONObject(i).optString("imgname")+" ");
+//                    }
+//                    mEditor.putInt("len",array.length());
+//                    mEditor.putBoolean("isDataExist",true);
+//                    mEditor.commit();
+//                    initView();
+//
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onFailed() {
+//
+//            }
+//        });
+//    }
 
-                try {
-                    JSONObject object=new JSONObject(result);
-                    JSONArray array=object.optJSONArray("data");
-                    mEditor.putInt("len",array.length());
-                    for (int i = 0; i <array.length() ; i++) {
-                        list_title.add(array.getJSONObject(i).optString("imgname")+" ");
-                        list_path.add(array.getJSONObject(i).optString("imgurl").replace('\\','\0'));
-                        mEditor.putString("path"+i,array.getJSONObject(i).optString("imgurl").replace('\\','\0'));
-                        mEditor.putString("imgName"+i,array.getJSONObject(i).optString("imgname")+" ");
-                    }
-                    mEditor.putInt("len",array.length());
-                    mEditor.putBoolean("isDataExist",true);
-                    mEditor.commit();
-                    initView();
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        });
-    }
     //用handler传递数据
     private void getDataFromInternet2() {
         clearData();
@@ -276,6 +287,11 @@ public class MainActivity extends AppCompatActivity  {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+
+            }
+
+            @Override
+            public void onFailed() {
 
             }
         });

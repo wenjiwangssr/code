@@ -18,8 +18,23 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".LoginActivity"
-            android:screenOrientation="landscape">
+        <service
+            android:name=".MyService"
+            android:enabled="true"
+            android:exported="true"></service>
+
+        <activity
+            android:name=".activity.ChangePasswordActivity"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity
+            android:name=".activity.SignUpActivity"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+        <activity
+            android:name=".activity.LaunchActivity"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="stateAlwaysHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -38,10 +53,8 @@
         </provider>
 
         <activity
-            android:name=".MainActivity"
-            android:screenOrientation="landscape">
-
-        </activity> <!-- 腾讯bugly自动更新 -->
+            android:name=".activity.MainActivity"
+            android:screenOrientation="landscape" /> <!-- 腾讯bugly自动更新 -->
         <activity
             android:name="com.tencent.bugly.beta.ui.BetaActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|locale"

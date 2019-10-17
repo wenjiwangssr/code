@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Environment;
 
+import com.example.autoplayad.activity.MainActivity;
 import com.tencent.bugly.Bugly;
 import com.tencent.bugly.beta.Beta;
 

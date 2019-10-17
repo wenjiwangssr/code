@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.example.autoplayad.activity.MainActivity;
+
 
 public class BootReceiver extends BroadcastReceiver {
     static final String ACTION = "android.intent.action.BOOT_COMPLETED";
