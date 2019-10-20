@@ -75,18 +75,21 @@ public class SignUpActivity extends AppCompatActivity {
 
 
         //发送验证码
-        bt_send_verify_code.setOnClickListener(new View.OnClickListener() {
+        bt_send_verify_code.setOnClickListener(new CustomClickListener() {
             @Override
-            public void onClick(View view) {
+            protected void onSingleClick() {
                 String phoneText=et_phoneText.getText().toString();
                 getVerificationCode(phoneText);
+            }
 
+            @Override
+            protected void onFastClick() {
 
             }
         });
-        bt_sign_in.setOnClickListener(new View.OnClickListener() {
+        bt_sign_in.setOnClickListener(new CustomClickListener() {
             @Override
-            public void onClick(View view) {
+            protected void onSingleClick() {
                 if (et_verification_code.getText().length()!=6){
                     ToastUtils.show(SignUpActivity.this,"请输入完整验证码");
                 }
@@ -96,6 +99,11 @@ public class SignUpActivity extends AppCompatActivity {
                 if (et_verification_code.getText().length()==6&&password.getText().length()>=6){
                     sign_up();
                 }
+            }
+
+            @Override
+            protected void onFastClick() {
+
             }
         });
 
@@ -113,18 +121,50 @@ public class SignUpActivity extends AppCompatActivity {
         et_phoneText.setInputType(InputType.TYPE_CLASS_PHONE);
         et_verification_code.setInputType(InputType.TYPE_CLASS_NUMBER);
         password=(EditText)findViewById(R.id.password);
-        password.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
     }
 
 
     //注册
     private void sign_up() {
 
-        String url="http://api.7958.com/public/index.php/api/login/registermember";
+        String url="http://api.7958.com/index.php/api/login/registermember";
         Map<String,String> map=new HashMap<>();
         map.put("phone",et_phoneText.getText().toString());
         map.put("password",password.getText().toString());
         map.put("phonecode",et_verification_code.getText().toString());
+        OkHttpUtils.getInstance().doPost(url, map, new DataCallBack() {
+            @Override
+            public void onSuccess(String result) {
+                try {
+
+
+                    JSONObject jsonObject=new JSONObject(result);
+                    if (jsonObject.optString("code").equals("200")){
+                        ToastUtils.show(SignUpActivity.this,"注册成功");
+                        Intent intent=new Intent(SignUpActivity.this,MainActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+
+                    }else {
+                        ToastUtils.show(SignUpActivity.this,jsonObject.optString("msg"));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailed() {
+
+            }
+        });
+    }
+
+    private void getVerificationCode(String phoneNumber){
+        String url="http://api.7958.com/index.php/api/login/getcode";
+        Map<String,String> map=new HashMap<>();
+        map.put("phone",phoneNumber);
         OkHttpUtils.getInstance().doPost(url, map, new DataCallBack() {
             @Override
             public void onSuccess(String result) {
@@ -142,39 +182,8 @@ public class SignUpActivity extends AppCompatActivity {
                             bt_send_verify_code.setEnabled(true);
                         }
                     }.start();
-
                     JSONObject jsonObject=new JSONObject(result);
-                    if (jsonObject.optString("code")=="200"){
-                        ToastUtils.show(SignUpActivity.this,"注册成功");
-                        Intent intent=new Intent(SignUpActivity.this,MainActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-
-                    }else {
-                        ToastUtils.show(SignUpActivity.this,jsonObject.optString("message"));
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailed() {
-
-            }
-        });
-    }
-
-    private void getVerificationCode(String phoneNumber){
-        String url="http://api.7958.com/public/index.php/api/login/getcode";
-        Map<String,String> map=new HashMap<>();
-        map.put("phone",et_phoneText.getText().toString());
-        OkHttpUtils.getInstance().doPost(url, map, new DataCallBack() {
-            @Override
-            public void onSuccess(String result) {
-                try {
-                    JSONObject jsonObject=new JSONObject(result);
-                    if (jsonObject.optString("code")=="200"){
+                    if (jsonObject.optString("code").equals("200")){
                         ToastUtils.show(SignUpActivity.this,"成功发送验证码");
                     }
                 } catch (JSONException e) {

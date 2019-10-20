@@ -8,7 +8,6 @@ import android.os.CountDownTimer;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -27,8 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ChangePasswordActivity extends AppCompatActivity {
-    private Button bt_sign_in;
     private Button bt_send_verify_code;
+    private Button bt_confirm;
     private EditText et_phoneText;
     private EditText et_verification_code;
     private EditText password;
@@ -74,17 +73,21 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
 
         //发送验证码
-        bt_send_verify_code.setOnClickListener(new View.OnClickListener() {
+        bt_send_verify_code.setOnClickListener(new CustomClickListener() {
             @Override
-            public void onClick(View view) {
+            protected void onSingleClick() {
                 String phoneText=et_phoneText.getText().toString();
                 getVerificationCode(phoneText);
+            }
+
+            @Override
+            protected void onFastClick() {
 
             }
         });
-        bt_sign_in.setOnClickListener(new View.OnClickListener() {
+        bt_confirm.setOnClickListener(new CustomClickListener() {
             @Override
-            public void onClick(View view) {
+            protected void onSingleClick() {
                 if (et_verification_code.getText().length()!=6){
                     ToastUtils.show(ChangePasswordActivity.this,"请输入完整验证码");
                 }
@@ -92,8 +95,13 @@ public class ChangePasswordActivity extends AppCompatActivity {
                     ToastUtils.show(ChangePasswordActivity.this,"密码不得少于6位");
                 }
                 if (et_verification_code.getText().length()==6&&password.getText().length()>=6){
-                    sign_up();
+                    changePassword();
                 }
+            }
+
+            @Override
+            protected void onFastClick() {
+
             }
         });
 
@@ -102,8 +110,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
     private void initView() {
         getSupportActionBar().hide();
 
-
-        bt_sign_in=(Button)findViewById(R.id.sign_in_button);
+        bt_confirm=(Button)findViewById(R.id.confirm_button);
         bt_send_verify_code=(Button)findViewById(R.id.send_verify_code);
         bt_send_verify_code.setEnabled(false);
         et_phoneText=(EditText)findViewById(R.id.phoneText);
@@ -111,14 +118,14 @@ public class ChangePasswordActivity extends AppCompatActivity {
         et_phoneText.setInputType(InputType.TYPE_CLASS_PHONE);
         et_verification_code.setInputType(InputType.TYPE_CLASS_NUMBER);
         password=(EditText)findViewById(R.id.password);
-        password.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
     }
 
 
     //注册
-    private void sign_up() {
+    private void changePassword() {
 
-        String url="http://api.7958.com/public/index.php/api/login/registermember";
+        String url="http://api.7958.com/index.php/api/login/resetpassword";
         Map<String,String> map=new HashMap<>();
         map.put("phone",et_phoneText.getText().toString());
         map.put("password",password.getText().toString());
@@ -128,14 +135,15 @@ public class ChangePasswordActivity extends AppCompatActivity {
             public void onSuccess(String result) {
                 try {
                     JSONObject jsonObject=new JSONObject(result);
-                    if (jsonObject.optString("code")=="200"){
+                    if (jsonObject.optString("code").equals("200")){
                         ToastUtils.show(ChangePasswordActivity.this,"更改密码成功");
-                        Intent intent=new Intent(ChangePasswordActivity.this, MainActivity.class);
+                        Intent intent=new Intent(ChangePasswordActivity.this,LaunchActivity.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.putExtra("phone",et_phoneText.getText().toString());
                         startActivity(intent);
 
                     }else {
-                        Toast.makeText(ChangePasswordActivity.this,jsonObject.optString("message"),Toast.LENGTH_LONG).show();
+                        Toast.makeText(ChangePasswordActivity.this,jsonObject.optString("msg"),Toast.LENGTH_LONG).show();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -150,9 +158,9 @@ public class ChangePasswordActivity extends AppCompatActivity {
     }
 
     private void getVerificationCode(String phoneNumber){
-        String url="http://api.7958.com/public/index.php/api/login/getcode";
+        String url="http://api.7958.com/index.php/api/login/getcode";
         Map<String,String> map=new HashMap<>();
-        map.put("phone",et_phoneText.getText().toString());
+        map.put("phone",phoneNumber);
         OkHttpUtils.getInstance().doPost(url, map, new DataCallBack() {
             @Override
             public void onSuccess(String result) {
@@ -174,7 +182,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                     }.start();
 
                     JSONObject jsonObject=new JSONObject(result);
-                    if (jsonObject.optString("code")=="200"){
+                    if (jsonObject.optString("code").equals("200")){
                         ToastUtils.show(ChangePasswordActivity.this,"成功发送验证码");
 
                     }

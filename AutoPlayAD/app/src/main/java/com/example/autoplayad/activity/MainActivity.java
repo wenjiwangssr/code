@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        Toast.makeText(this,"再按一次推出程序",Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this,"再按一次推出程序",Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity  {
 //    //网络请求数据
 //    private void getDataFromInternet() {
 //        clearData();
-//        String url="http://api.7958.com/public/index.php/api/image/getimg";
+//        String url="http://api.7958.com/index.php/api/image/getimg";
 //        OkHttpUtils.getInstance().doGet(url, new DataCallBack() {
 //            @Override
 //            public void onSuccess(String result) {
@@ -258,7 +258,7 @@ public class MainActivity extends AppCompatActivity  {
     //用handler传递数据
     private void getDataFromInternet2() {
         clearData();
-        String url="http://api.7958.com/public/index.php/api/image/getimg";
+        String url="http://api.7958.com/index.php/api/image/getimg";
         OkHttpUtils.getInstance().doGet2(url, new DataCallBack() {
             @Override
             public void onSuccess(String result) {
@@ -269,7 +269,8 @@ public class MainActivity extends AppCompatActivity  {
                     mEditor.putInt("len",array.length());
                     for (int i = 0; i <array.length() ; i++) {
                         list_title.add(array.getJSONObject(i).optString("imgname")+" ");
-                        list_path.add(array.getJSONObject(i).optString("imgurl").replace('\\','\0'));
+//                        list_path.add(array.getJSONObject(i).optString("imgurl").replace('\\','\0'));
+                        list_path.add(array.getJSONObject(i).optString("imgurl"));
                         mEditor.putString("path"+i,array.getJSONObject(i).optString("imgurl").replace('\\','\0'));
                         mEditor.putString("imgName"+i,array.getJSONObject(i).optString("imgname")+" ");
                     }

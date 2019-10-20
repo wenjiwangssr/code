@@ -45,12 +45,7 @@ public class LaunchActivity extends AppCompatActivity {
         App.context=this;
 //        startService()
         initView();
-        bt_login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                login();
-            }
-        });
+
 
     }
 
@@ -62,28 +57,43 @@ public class LaunchActivity extends AppCompatActivity {
         btSignUp=(Button)findViewById(R.id.sign_in_button);
         et_phoneText=(EditText)findViewById(R.id.phoneText);
         et_phoneText.setInputType(InputType.TYPE_CLASS_PHONE);
-
+        et_phoneText.setText(getIntent().getStringExtra("phone"));
         password=(EditText)findViewById(R.id.password);
-        password.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
 
-        bt_login.setOnClickListener(new View.OnClickListener() {
+        bt_login.setOnClickListener(new CustomClickListener() {
             @Override
-            public void onClick(View view) {
+            protected void onSingleClick() {
                 login();
             }
-        });
 
-        btSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            protected void onFastClick() {
+
+            }
+        });
+        btSignUp.setOnClickListener(new CustomClickListener() {
+            @Override
+            protected void onSingleClick() {
                 startActivity(new Intent(LaunchActivity.this,SignUpActivity.class));
+            }
+
+            @Override
+            protected void onFastClick() {
+
             }
         });
 
-        btChangePassword.setOnClickListener(new View.OnClickListener() {
+
+        btChangePassword.setOnClickListener(new CustomClickListener() {
             @Override
-            public void onClick(View view) {
+            protected void onSingleClick() {
                 startActivity(new Intent(LaunchActivity.this, ChangePasswordActivity.class));
+            }
+
+            @Override
+            protected void onFastClick() {
+
             }
         });
 
@@ -125,7 +135,7 @@ public class LaunchActivity extends AppCompatActivity {
     //登录
     private void login() {
         if((!TextUtils.isEmpty(password.getText().toString()))&&password.getText().length()>5) {
-            String url = "http://api.7958.com/public/index.php/api/login/userlogin";
+            String url = "http://api.7958.com/index.php/api/login/userlogin";
             Map<String, String> map = new HashMap<>();
             map.put("phone", et_phoneText.getText().toString());
             map.put("password", password.getText().toString());
@@ -134,7 +144,7 @@ public class LaunchActivity extends AppCompatActivity {
                 public void onSuccess(String result) {
                     try {
                         JSONObject jsonObject = new JSONObject(result);
-                        if (jsonObject.optString("code") == "200") {
+                        if (jsonObject.optString("code").equals("200")) {
                             Intent intent = new Intent(LaunchActivity.this, MainActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(intent);
@@ -142,7 +152,7 @@ public class LaunchActivity extends AppCompatActivity {
 
                         }
                         else {
-                            ToastUtils.show(LaunchActivity.this,jsonObject.optString("message"));
+                            ToastUtils.show(LaunchActivity.this,jsonObject.optString("msg"));
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -157,6 +167,9 @@ public class LaunchActivity extends AppCompatActivity {
         }else {
             ToastUtils.show(LaunchActivity.this,"密码不能为空或小于6位");
         }
+
+
+
     }
 
 
