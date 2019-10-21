@@ -14,6 +14,7 @@ import android.widget.EditText;
 
 import com.example.autoplayad.App;
 import com.example.autoplayad.DataCallBack;
+import com.example.autoplayad.utils.Config;
 import com.example.autoplayad.utils.OkHttpUtils;
 import com.example.autoplayad.R;
 import com.example.autoplayad.utils.ToastUtils;
@@ -49,9 +50,7 @@ public class SignUpActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 String phoneText=charSequence.toString();
                 if (phoneText.length()==11){
-                    String telRegex = "^((13[0-9])|(15[^4])|(18[0-9])|(17[0-8])|(147,145))\\d{8}$";
-
-                    boolean isPhone=phoneText.matches(telRegex);
+                    boolean isPhone=phoneText.matches(Config.telRegex);
                     if (!isPhone){
                         bt_send_verify_code.setEnabled(false);//好像多余了
                         ToastUtils.show(SignUpActivity.this,"请输入正确的手机号码");
@@ -133,6 +132,13 @@ public class SignUpActivity extends AppCompatActivity {
         map.put("phone",et_phoneText.getText().toString());
         map.put("password",password.getText().toString());
         map.put("phonecode",et_verification_code.getText().toString());
+
+//        //测试
+//        Intent intent=new Intent(SignUpActivity.this,LaunchActivity.class);
+//        intent.putExtra("phone",et_phoneText.getText().toString());
+//        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
+//        startActivity(intent);
+
         OkHttpUtils.getInstance().doPost(url, map, new DataCallBack() {
             @Override
             public void onSuccess(String result) {
@@ -142,7 +148,8 @@ public class SignUpActivity extends AppCompatActivity {
                     JSONObject jsonObject=new JSONObject(result);
                     if (jsonObject.optString("code").equals("200")){
                         ToastUtils.show(SignUpActivity.this,"注册成功");
-                        Intent intent=new Intent(SignUpActivity.this,MainActivity.class);
+                        Intent intent=new Intent(SignUpActivity.this,LaunchActivity.class);
+                        intent.putExtra("phone",et_phoneText.getText().toString());
                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
 

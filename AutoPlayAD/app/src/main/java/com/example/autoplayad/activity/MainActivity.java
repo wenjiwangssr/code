@@ -18,10 +18,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.autoplayad.App;
@@ -29,9 +29,10 @@ import com.example.autoplayad.DataCallBack;
 import com.example.autoplayad.utils.Config;
 import com.example.autoplayad.utils.OkHttpUtils;
 import com.example.autoplayad.R;
+import com.example.autoplayad.utils.ToastUtils;
 import com.stx.xhb.xbanner.XBanner;
 import com.stx.xhb.xbanner.transformers.Transformer;
-import com.tencent.bugly.Bugly;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bugly.init(this, Config.appId,false);
+//        Bugly.init(this, Config.appId,false);
 
         setContentView(R.layout.activity_main);
 
@@ -316,7 +317,7 @@ public class MainActivity extends AppCompatActivity  {
     class TimeChangeReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction()==Intent.ACTION_TIME_TICK){
+            if (intent.getAction().equals(Intent.ACTION_TIME_TICK)){
                 Calendar cal = Calendar.getInstance();
                 int hour = cal.get(Calendar.HOUR_OF_DAY);
                 int min = cal.get(Calendar.MINUTE);
@@ -334,5 +335,17 @@ public class MainActivity extends AppCompatActivity  {
             }
 
         }
+    }
+    private long exitTime=0;
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode==KeyEvent.KEYCODE_BACK&&event.getAction()==KeyEvent.ACTION_DOWN){
+            if((System.currentTimeMillis()-exitTime)>2000){
+                ToastUtils.show(MainActivity.this,"再按一次退出程序");
+                exitTime=System.currentTimeMillis();
+            }else finish();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }

@@ -2,12 +2,14 @@ package com.example.autoplayad.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.usage.UsageEvents;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,6 +21,7 @@ import com.example.autoplayad.utils.Config;
 import com.example.autoplayad.utils.OkHttpUtils;
 import com.example.autoplayad.R;
 import com.example.autoplayad.utils.ToastUtils;
+import com.tencent.bugly.Bugly;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,6 +46,7 @@ public class LaunchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
         App.context=this;
+        Bugly.init(this, Config.appId,false);
 //        startService()
         initView();
 
@@ -172,6 +176,16 @@ public class LaunchActivity extends AppCompatActivity {
 
     }
 
-
-
+    private long exitTime=0;
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode==KeyEvent.KEYCODE_BACK&&event.getAction()==KeyEvent.ACTION_DOWN){
+            if((System.currentTimeMillis()-exitTime)>2000){
+                ToastUtils.show(LaunchActivity.this,"再按一次退出程序");
+                exitTime=System.currentTimeMillis();
+            }else finish();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
 }

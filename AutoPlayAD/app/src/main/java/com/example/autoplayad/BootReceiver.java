@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.example.autoplayad.activity.LaunchActivity;
 import com.example.autoplayad.activity.MainActivity;
 
 
@@ -12,7 +13,7 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(ACTION)){
-            Intent mainActivityIntent = new Intent(context, MainActivity.class);
+            Intent mainActivityIntent = new Intent(context, LaunchActivity.class);
             mainActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(mainActivityIntent);
         }
